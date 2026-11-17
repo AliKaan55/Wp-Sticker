@@ -5,6 +5,7 @@ import type { ChangeEvent } from "react";
 import { STICKER_PACK_MAX_COUNT, STICKER_PACK_MIN_COUNT } from "@/lib/constants";
 import { buildStickerPackZip } from "@/lib/services/sticker-pack-client";
 import { getBaseName } from "@/lib/utils/format";
+import { canShareFiles, isAbortError } from "@/lib/utils/share";
 import { Spinner } from "@/components/ui/Spinner";
 
 interface StickerPackPanelProps {
@@ -40,10 +41,30 @@ export function StickerPackPanel({ completedStickers, disabled = false }: Sticke
         publisher: publisher.trim() || "Bilinmiyor",
         stickers: completedStickers,
       });
+      const filename = `${getBaseName(packName || "cikartma-paketi")}.wastickers`;
+
+      // iOS Safari ignores the <a download> attribute for blob: URLs, so a
+      // programmatic click there just opens/previews the zip instead of
+      // saving it. The Web Share API's native share sheet (with a "Save to
+      // Files" option) actually saves the real file, so it's tried first
+      // wherever the browser supports sharing files.
+      const file = new File([zipBlob], filename, { type: "application/zip" });
+      if (canShareFiles([file])) {
+        try {
+          await navigator.share({ files: [file] });
+          return;
+        } catch (shareError) {
+          if (isAbortError(shareError)) {
+            return;
+          }
+          // Fall through to the classic download link below.
+        }
+      }
+
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${getBaseName(packName || "cikartma-paketi")}.wastickers`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -119,6 +140,7 @@ export function StickerPackPanel({ completedStickers, disabled = false }: Sticke
         Bu dosya; çıkartmaları, bir tepsi (tray) ikonunu ve bir açıklama dosyasını (pack.json) tek bir
         ZIP&apos;te toplar. Hangi üçüncü taraf &quot;sticker maker&quot; uygulamasının bunu doğrudan içe
         aktarabildiği uygulamadan uygulamaya değişir; aktarmazsa çıkartmaları tek tek de ekleyebilirsiniz.
+        iPhone&apos;da paylaşım menüsü açılırsa &quot;Dosyalara Kaydet&quot;i seçin.
       </p>
     </div>
   );
