@@ -70,7 +70,17 @@ export async function buildStickerPackZip(input: StickerPackInput): Promise<Blob
     zip.file(entry.imageFile, entry.blob);
   }
 
-  const trayIcon = await buildTrayIcon(input.stickers[0].blob);
+  // Destructure rather than index with `[0]`: under a tsconfig with
+  // noUncheckedIndexedAccess enabled (as Vercel's build used, even though
+  // the length check above already guarantees this at runtime), a plain
+  // array index still types as possibly-undefined and TypeScript can't
+  // narrow it away — but it CAN narrow an explicitly-checked local binding.
+  const [firstEntry] = stickerEntries;
+  if (!firstEntry) {
+    throw new Error("Pakete eklenecek çıkartma yok.");
+  }
+
+  const trayIcon = await buildTrayIcon(firstEntry.blob);
   zip.file("tray.png", trayIcon);
 
   zip.file(
