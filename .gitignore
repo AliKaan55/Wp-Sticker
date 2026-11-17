@@ -1,0 +1,42 @@
+# Dependencies
+/node_modules
+
+# Next.js build output
+/.next/
+/out/
+
+# Production
+/build
+
+# Service worker / PWA files generated at build time by next-pwa — these
+# are regenerated on every build, don't commit them.
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/swe-worker-*.js
+/public/swe-worker-*.js.map
+
+# Secrets — never commit real API keys. Only .env.example (no real values)
+# should be in git; Vercel project settings hold the real ones.
+.env
+.env*.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+*.pem
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
